@@ -52,8 +52,8 @@ warnings.filterwarnings("ignore")
 # Paths
 # ─────────────────────────────────────────────
 
-PROJECT_ROOT = "/scratch/users/joshua04/ECHO-Codex"
-DATA_ROOT    = "/scratch/users/joshua04/ECHO/data/echonet_dynamic"
+PROJECT_ROOT = os.environ.get("ECHOML_ROOT", os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+DATA_ROOT    = os.environ.get("ECHONET_ROOT", "/scratch/users/joshua04/ECHO/data/echonet_dynamic")
 WEIGHTS_DIR  = os.path.join(PROJECT_ROOT, "weights")
 REG_CKPT     = os.path.join(PROJECT_ROOT, "checkpoints", "ef_best.pth")
 SEG_CKPT     = os.path.join(PROJECT_ROOT, "checkpoints", "echo_seg_best.pth")
