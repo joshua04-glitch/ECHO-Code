@@ -1,195 +1,188 @@
 """
-src/losses/metrics.py — Improved Losses and Metrics
-===================================================
-
-Critical fix: dice_score EXCLUDES background by default.
-
-Includes:
-  - SoftDiceLoss (foreground only)
-  - BoundaryLoss
-  - CombinedLoss (GPU-safe class weights)
-  - DeepSupervisionLoss
+losses/metrics.py — Loss functions and metrics with ignore_index support.
 """
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+IGNORE_INDEX = 255
 
-# ====================================================================
-# METRICS (non-differentiable — for evaluation only)
-# ====================================================================
 
-def dice_score(logits, targets, num_classes=5, include_background=False, eps=1e-6):
-    """
-    Mean Dice score over present classes.
-    Background excluded by default.
-    """
+def dice_score(logits, targets, num_classes, ignore_index=IGNORE_INDEX):
+    """Mean Dice score across foreground classes, ignoring unlabeled pixels."""
+    if isinstance(logits, tuple):
+        logits = logits[0]
+
     preds = torch.argmax(logits, dim=1)
-    start = 0 if include_background else 1
+    valid = targets != ignore_index
 
-    scores = []
-    for c in range(start, num_classes):
-        pred_c = (preds == c).float()
-        tgt_c = (targets == c).float()
-        inter = (pred_c * tgt_c).sum()
-        union = pred_c.sum() + tgt_c.sum()
+    dice_sum = 0.0
+    count = 0
 
-        if union < eps:
-            continue
-        scores.append(((2.0 * inter + eps) / (union + eps)).item())
+    for c in range(1, num_classes):
+        pred_c = (preds == c) & valid
+        true_c = (targets == c) & valid
 
-    return sum(scores) / len(scores) if scores else 0.0
+        intersection = (pred_c & true_c).sum().float()
+        union = pred_c.sum().float() + true_c.sum().float()
+
+        if union > 0:
+            dice_sum += (2.0 * intersection / (union + 1e-6)).item()
+            count += 1
+
+    return dice_sum / max(count, 1)
 
 
-def per_class_dice(logits, targets, num_classes=5, eps=1e-6):
-    """
-    Per-class Dice. Returns dict {class_id: dice}.
-    """
+def per_class_dice(logits, targets, num_classes, class_names=None, ignore_index=IGNORE_INDEX):
+    """Per-class Dice scores, ignoring unlabeled pixels."""
+    if isinstance(logits, tuple):
+        logits = logits[0]
+
     preds = torch.argmax(logits, dim=1)
-    out = {}
+    valid = targets != ignore_index
+
+    if class_names is None:
+        class_names = [f"class_{c}" for c in range(num_classes)]
+
+    results = {}
     for c in range(num_classes):
-        pred_c = (preds == c).float()
-        tgt_c = (targets == c).float()
-        inter = (pred_c * tgt_c).sum()
-        union = pred_c.sum() + tgt_c.sum()
-        out[c] = (
-            ((2.0 * inter + eps) / (union + eps)).item()
-            if union > eps
-            else float("nan")
-        )
-    return out
+        pred_c = (preds == c) & valid
+        true_c = (targets == c) & valid
+
+        intersection = (pred_c & true_c).sum().float()
+        union = pred_c.sum().float() + true_c.sum().float()
+
+        if union > 0:
+            results[class_names[c]] = (2.0 * intersection / (union + 1e-6)).item()
+        else:
+            results[class_names[c]] = float("nan")
+
+    return results
 
 
-# ====================================================================
-# LOSSES
-# ====================================================================
+class DiceLoss(nn.Module):
+    """Soft Dice loss with ignore_index support."""
 
-class SoftDiceLoss(nn.Module):
-    """
-    Foreground-only Soft Dice.
-    """
-
-    def __init__(self, num_classes=5, smooth=1.0):
+    def __init__(self, num_classes, smooth=1.0, ignore_index=IGNORE_INDEX):
         super().__init__()
         self.num_classes = num_classes
         self.smooth = smooth
+        self.ignore_index = ignore_index
 
     def forward(self, logits, targets):
+        valid = targets != self.ignore_index
+
+        safe_targets = targets.clone()
+        safe_targets[~valid] = 0
+
         probs = F.softmax(logits, dim=1)
-        tgt_oh = F.one_hot(targets, self.num_classes).permute(0, 3, 1, 2).float()
+        one_hot = F.one_hot(safe_targets, self.num_classes)
+        one_hot = one_hot.permute(0, 3, 1, 2).float()
 
-        dice_sum = 0.0
-        for c in range(1, self.num_classes):  # skip background
-            p = probs[:, c]
-            t = tgt_oh[:, c]
-            inter = (p * t).sum()
-            union = p.sum() + t.sum()
-            dice_sum += (2.0 * inter + self.smooth) / (union + self.smooth)
+        valid_mask = valid.unsqueeze(1).expand_as(probs).float()
 
-        return 1.0 - dice_sum / (self.num_classes - 1)
+        probs = probs * valid_mask
+        one_hot = one_hot * valid_mask
+
+        dims = (0, 2, 3)
+        intersection = (probs * one_hot).sum(dims)
+        union = probs.sum(dims) + one_hot.sum(dims)
+
+        dice = (2.0 * intersection + self.smooth) / (union + self.smooth)
+
+        return 1.0 - dice[1:].mean()
 
 
 class BoundaryLoss(nn.Module):
-    """
-    Boundary-weighted Cross Entropy.
-    """
+    """Boundary-aware loss with ignore_index support."""
 
-    def __init__(self, boundary_weight=3.0, kernel_size=3):
+    def __init__(self, ignore_index=IGNORE_INDEX):
         super().__init__()
-        self.bw = boundary_weight
-        self.ks = kernel_size
-        self.pad = kernel_size // 2
+        self.ignore_index = ignore_index
+        # Store as plain tensors — we move them in _edges()
+        self._sobel_x = torch.tensor(
+            [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]],
+            dtype=torch.float32
+        ).view(1, 1, 3, 3)
+        self._sobel_y = torch.tensor(
+            [[-1, -2, -1], [0, 0, 0], [1, 2, 1]],
+            dtype=torch.float32
+        ).view(1, 1, 3, 3)
 
-    def _boundary_mask(self, targets):
-        B, H, W = targets.shape
-        boundary = torch.zeros(B, H, W, device=targets.device)
-
-        for c in range(1, 5):
-            m = (targets == c).float().unsqueeze(1)
-            dilated = F.max_pool2d(m, self.ks, stride=1, padding=self.pad)
-            eroded = 1.0 - F.max_pool2d(1.0 - m, self.ks, stride=1, padding=self.pad)
-            boundary = torch.max(boundary, (dilated - eroded).squeeze(1))
-
-        return boundary
+    def _edges(self, mask):
+        m = mask.unsqueeze(1).float()
+        sx = self._sobel_x.to(m.device)
+        sy = self._sobel_y.to(m.device)
+        gx = F.conv2d(m, sx, padding=1)
+        gy = F.conv2d(m, sy, padding=1)
+        return (gx.abs() + gy.abs()).squeeze(1).clamp(0, 1)
 
     def forward(self, logits, targets):
-        ce = F.cross_entropy(logits, targets, reduction="none")
-        bdry = self._boundary_mask(targets)
-        weight = 1.0 + bdry * (self.bw - 1.0)
-        return (ce * weight).mean()
+        valid = (targets != self.ignore_index).float()
+
+        preds = torch.argmax(logits, dim=1).float()
+
+        safe_targets = targets.clone().float()
+        safe_targets[targets == self.ignore_index] = 0
+
+        pred_edges = self._edges(preds) * valid
+        true_edges = self._edges(safe_targets) * valid
+
+        n_valid = valid.sum().clamp(min=1)
+        return F.mse_loss(pred_edges, true_edges, reduction="sum") / n_valid
 
 
 class CombinedLoss(nn.Module):
-    """
-    CE + Dice + Boundary (GPU-safe).
-    """
+    """CE + Dice + Boundary with ignore_index support."""
 
-    def __init__(
-        self,
-        num_classes=5,
-        ce_weight=1.0,
-        dice_weight=1.0,
-        boundary_weight=0.0,
-        class_weights=None,
-    ):
+    def __init__(self, num_classes, ce_weight=1.0, dice_weight=1.0,
+                 boundary_weight=0.5, class_weights=None,
+                 ignore_index=IGNORE_INDEX):
         super().__init__()
+        self.ce_weight = ce_weight
+        self.dice_weight = dice_weight
+        self.boundary_weight = boundary_weight
+        self.ignore_index = ignore_index
 
-        self.w_ce = ce_weight
-        self.w_dice = dice_weight
-        self.w_bdry = boundary_weight
-        self.num_classes = num_classes
+        self._class_weights_list = class_weights
 
-        # 🔥 GPU-SAFE CLASS WEIGHTS FIX
-        if class_weights is not None:
-            w = torch.tensor(class_weights, dtype=torch.float32)
-            assert len(w) == num_classes
-            self.register_buffer("ce_weight_tensor", w)
-            self.ce = nn.CrossEntropyLoss(weight=self.ce_weight_tensor)
-        else:
-            self.ce = nn.CrossEntropyLoss()
-
-        self.dice = SoftDiceLoss(num_classes)
-        self.boundary = BoundaryLoss() if boundary_weight > 0 else None
+        self.dice = DiceLoss(num_classes, ignore_index=ignore_index)
+        self.boundary = BoundaryLoss(ignore_index=ignore_index)
 
     def forward(self, logits, targets):
-        C = logits.shape[1]
-        assert C == self.num_classes
+        if self._class_weights_list is not None:
+            w = torch.tensor(self._class_weights_list,
+                             dtype=logits.dtype, device=logits.device)
+        else:
+            w = None
 
-        loss = torch.tensor(0.0, device=logits.device)
-
-        if self.w_ce > 0:
-            loss = loss + self.w_ce * self.ce(logits, targets)
-
-        if self.w_dice > 0:
-            loss = loss + self.w_dice * self.dice(logits, targets)
-
-        if self.w_bdry > 0 and self.boundary is not None:
-            loss = loss + self.w_bdry * self.boundary(logits, targets)
-
+        loss = self.ce_weight * F.cross_entropy(
+            logits, targets,
+            weight=w,
+            ignore_index=self.ignore_index,
+        )
+        loss += self.dice_weight * self.dice(logits, targets)
+        if self.boundary_weight > 0:
+            loss += self.boundary_weight * self.boundary(logits, targets)
         return loss
 
 
 class DeepSupervisionLoss(nn.Module):
-    """
-    Wrap base loss for deep supervision outputs.
-    """
+    """Deep supervision wrapper."""
 
     def __init__(self, base_loss, aux_weights=(0.4, 0.2)):
         super().__init__()
         self.base_loss = base_loss
         self.aux_weights = aux_weights
 
-    def forward(self, output, targets):
-        if isinstance(output, tuple) and len(output) == 2:
-            main, aux_list = output
+    def forward(self, outputs, targets):
+        if isinstance(outputs, tuple):
+            main_logits, aux_list = outputs
+            loss = self.base_loss(main_logits, targets)
+            for i, aux in enumerate(aux_list):
+                if i < len(self.aux_weights):
+                    loss += self.aux_weights[i] * self.base_loss(aux, targets)
+            return loss
         else:
-            return self.base_loss(output, targets)
-
-        loss = self.base_loss(main, targets)
-
-        for aux, w in zip(aux_list, self.aux_weights):
-            loss = loss + w * self.base_loss(aux, targets)
-
-        return loss
+            return self.base_loss(outputs, targets)
