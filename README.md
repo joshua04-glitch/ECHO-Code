@@ -27,26 +27,27 @@ The project demonstrates how heterogeneous partially labeled datasets can be com
 ---
 
 ## Repository Structure
-Echo-Code
-│
-├── main.py # Entry point for inference
-├── requirements.txt # Python dependencies
-├── README.md
-│
-├── checkpoints/ # Trained models
-├── weights/ # Pretrained backbone
-│
-├── scripts/ # Training scripts
-│ ├── train_echo_seg.py
-│ ├── train_ef.py
-│ └── train_quality.py
-│
-├── src/ # Core model code
-│ ├── models/
-│ ├── datasets/
-│ ├── inference/
-│ └── losses/
 
+```
+Echo-Code
+├── main.py                 # Entry point for inference
+├── requirements.txt        # Python dependencies
+├── README.md
+
+├── checkpoints/            # Trained models
+├── weights/                # Pretrained backbone
+
+├── scripts/                # Training scripts
+│   ├── train_echo_seg.py
+│   ├── train_ef.py
+│   └── train_quality.py
+
+├── src/                    # Core model code
+│   ├── models/
+│   ├── datasets/
+│   ├── inference/
+│   └── losses/
+```
 
 ---
 
@@ -54,7 +55,6 @@ Echo-Code
 
 Create a Python environment and install dependencies:
 pip install -r requirements.txt
-
 
 Core dependencies:
 torch
@@ -67,7 +67,6 @@ scikit-image
 scikit-learn
 matplotlib
 tqdm
-
 
 ---
 
