@@ -1,0 +1,42 @@
+Device: cuda
+Train: 7465 videos | Val: 1288 videos
+Loaded pretrained backbone: _IncompatibleKeys(missing_keys=['encoder.time_encoder.pe'], unexpected_keys=[])
+
+Backbone LR: 5.0e-06  |  Head LR: 5.0e-04
+Warmup epochs: 5  |  Max epochs: 60
+
+[Epoch 00] train RMSE 9.66  MAE 6.87  R² 0.393 | val RMSE 7.30  MAE 5.46  R² 0.648 | lr_bb 2.0e-06  lr_hd 2.0e-04
+  ↑ New best val RMSE: 7.30 — saved checkpoint
+[Epoch 01] train RMSE 7.27  MAE 5.18  R² 0.657 | val RMSE 6.40  MAE 4.71  R² 0.729 | lr_bb 3.0e-06  lr_hd 3.0e-04
+  ↑ New best val RMSE: 6.40 — saved checkpoint
+[Epoch 02] train RMSE 6.68  MAE 4.83  R² 0.710 | val RMSE 6.08  MAE 4.45  R² 0.756 | lr_bb 4.0e-06  lr_hd 4.0e-04
+  ↑ New best val RMSE: 6.08 — saved checkpoint
+[Epoch 03] train RMSE 6.42  MAE 4.62  R² 0.732 | val RMSE 6.05  MAE 4.42  R² 0.759 | lr_bb 5.0e-06  lr_hd 5.0e-04
+  ↑ New best val RMSE: 6.05 — saved checkpoint
+[Epoch 04] train RMSE 6.15  MAE 4.46  R² 0.754 | val RMSE 5.83  MAE 4.29  R² 0.776 | lr_bb 5.0e-06  lr_hd 5.0e-04
+  ↑ New best val RMSE: 5.83 — saved checkpoint
+[Epoch 05] train RMSE 5.90  MAE 4.28  R² 0.774 | val RMSE 5.72  MAE 4.25  R² 0.784 | lr_bb 5.0e-06  lr_hd 5.0e-04
+  ↑ New best val RMSE: 5.72 — saved checkpoint
+[Epoch 06] train RMSE 5.78  MAE 4.21  R² 0.783 | val RMSE 5.57  MAE 4.14  R² 0.795 | lr_bb 5.0e-06  lr_hd 5.0e-04
+  ↑ New best val RMSE: 5.57 — saved checkpoint
+[Epoch 07] train RMSE 5.64  MAE 4.12  R² 0.793 | val RMSE 5.55  MAE 4.12  R² 0.796 | lr_bb 5.0e-06  lr_hd 5.0e-04
+  ↑ New best val RMSE: 5.55 — saved checkpoint
+[Epoch 08] train RMSE 5.59  MAE 4.08  R² 0.797 | val RMSE 5.40  MAE 4.01  R² 0.808 | lr_bb 4.9e-06  lr_hd 4.9e-04
+  ↑ New best val RMSE: 5.40 — saved checkpoint
+[Epoch 09] train RMSE 5.48  MAE 4.01  R² 0.805 | val RMSE 5.38  MAE 4.00  R² 0.809 | lr_bb 4.9e-06  lr_hd 4.9e-04
+  ↑ New best val RMSE: 5.38 — saved checkpoint
+[Epoch 10] train RMSE 5.44  MAE 3.96  R² 0.808 | val RMSE 5.43  MAE 4.03  R² 0.805 | lr_bb 4.9e-06  lr_hd 4.9e-04
+[Epoch 11] train RMSE 5.24  MAE 3.84  R² 0.822 | val RMSE 5.52  MAE 4.10  R² 0.799 | lr_bb 4.8e-06  lr_hd 4.8e-04
+[Epoch 12] train RMSE 5.15  MAE 3.77  R² 0.828 | val RMSE 5.69  MAE 4.23  R² 0.786 | lr_bb 4.7e-06  lr_hd 4.7e-04
+[Epoch 13] train RMSE 5.11  MAE 3.75  R² 0.830 | val RMSE 5.43  MAE 4.05  R² 0.805 | lr_bb 4.7e-06  lr_hd 4.7e-04
+[Epoch 14] train RMSE 4.99  MAE 3.67  R² 0.839 | val RMSE 5.49  MAE 4.09  R² 0.801 | lr_bb 4.6e-06  lr_hd 4.6e-04
+[Epoch 15] train RMSE 4.98  MAE 3.65  R² 0.839 | val RMSE 5.43  MAE 4.04  R² 0.805 | lr_bb 4.5e-06  lr_hd 4.5e-04
+[Epoch 16] train RMSE 4.91  MAE 3.62  R² 0.843 | val RMSE 5.48  MAE 4.04  R² 0.802 | lr_bb 4.4e-06  lr_hd 4.4e-04
+[Epoch 17] train RMSE 4.86  MAE 3.58  R² 0.846 | val RMSE 5.52  MAE 4.11  R² 0.798 | lr_bb 4.4e-06  lr_hd 4.4e-04
+[Epoch 18] train RMSE 4.79  MAE 3.53  R² 0.851 | val RMSE 5.54  MAE 4.11  R² 0.797 | lr_bb 4.3e-06  lr_hd 4.3e-04
+[Epoch 19] train RMSE 4.67  MAE 3.46  R² 0.858 | val RMSE 5.46  MAE 4.06  R² 0.803 | lr_bb 4.2e-06  lr_hd 4.2e-04
+[Epoch 20] train RMSE 4.71  MAE 3.47  R² 0.856 | val RMSE 5.45  MAE 4.07  R² 0.804 | lr_bb 4.0e-06  lr_hd 4.0e-04
+[Epoch 21] train RMSE 4.62  MAE 3.44  R² 0.861 | val RMSE 5.59  MAE 4.19  R² 0.793 | lr_bb 3.9e-06  lr_hd 3.9e-04
+Early stopping after 22 epochs (no improvement for 12).
+
+Training complete. Best val RMSE: 5.38
