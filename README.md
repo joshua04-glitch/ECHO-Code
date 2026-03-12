@@ -113,13 +113,57 @@ Echo-Code/
 ├── checkpoints/
 ```
 
-Datasets used:
+### Datasets Used
 
-- EchoNet-Dynamic
-- CAMUS
-- CardiacUDA
-- CACTUS
-- PLOSONE
+| Dataset | Samples | Labels | Pipeline Role | Link |
+|-------|-------|-------|-------|-------|
+| **EchoNet-Dynamic** | 10,033 | EF, LV trace | EF regression (train + eval) | https://echonet.github.io/dynamic/ |
+| **CAMUS** | 7,500 | LV, LA | Segmentation (left-side only) | https://www.kaggle.com/datasets/shoybhasan/camus-human-heart-data/data |
+| **CardiacUDA** | 9,680 | All 4 Chambers | Segmentation (G = source, R = held-out target) | https://github.com/openmedlab/Awesome-Medical-Dataset/blob/main/resources/CardiacUDA.md |
+| **PLOSONE Cardiac Dataset** | 202 | All 4 Chambers | Small fully-labeled supplement | https://www.kaggle.com/datasets/carlosmorenogarcia/cardiac-images-masks-plosone |
+| **CACTUS** | 37,757 | Image quality grades (0–10) | Image quality grading | https://www.frdr-dfdr.ca/repo/dataset/86beb91e-c0ba-496b-ad38-732b67e3d5f6 |
+
+---
+
+### Dataset Citations
+
+**EchoNet-Dynamic**
+
+Ouyang D., He B., Ghorbani A. et al.  
+*Video-based AI for beat-to-beat assessment of cardiac function.*  
+Nature, 2020.  
+https://echonet.github.io/dynamic/
+
+---
+
+**CAMUS**
+
+Leclerc S. et al.  
+*Deep learning for segmentation using an open large-scale dataset in 2D echocardiography.*  
+IEEE Transactions on Medical Imaging, 2019.
+
+---
+
+**CardiacUDA**
+
+OpenMedLab.  
+*CardiacUDA: Cross-domain cardiac ultrasound segmentation dataset.*
+
+---
+
+**PLOSONE Cardiac Dataset**
+
+Moreno-Garcia C. et al.  
+*Kaggle cardiac segmentation dataset derived from PLOS One publication.*
+
+---
+
+**CACTUS**
+
+Elmekki H., Alagha A., Sami H., et al. (2025).  
+**CACTUS: An open dataset and framework for automated Cardiac Assessment and Classification of Ultrasound images using deep transfer learning.**  
+Federated Research Data Repository.  
+https://doi.org/10.20383/103.01484
 
 ---
 
