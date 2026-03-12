@@ -84,10 +84,11 @@ checkpoints/
 
 
 Place them in the repository root:
+```
 Echo-Code/
 ├── data/
 ├── checkpoints/
-
+```
 
 Datasets used:
 
@@ -175,7 +176,7 @@ Stroke Volume    : 55.6 mL
 ── Cardiac Output ─────────────────────────────────
 Heart Rate       : 60 bpm
 Cardiac Output   : 3.33 L/min
-
+```
 
 ---
 
