@@ -26,6 +26,29 @@ The project demonstrates how heterogeneous partially labeled datasets can be com
 
 ---
 
+## System Pipeline
+
+```mermaid
+graph LR
+
+A[Echocardiography Video] --> B[Frame Extraction]
+
+B --> C[Segmentation Model<br>Attention U-Net]
+B --> D[EF Regression Model<br>ConvNeXt + Transformer]
+B --> E[Image Quality Model<br>EfficientNet-B0]
+
+C --> F[Chamber Areas]
+F --> G[EDV / ESV]
+
+D --> H[Ejection Fraction]
+
+G --> I[Stroke Volume]
+I --> J[Cardiac Output]
+
+H --> K[Cardiac Report]
+J --> K
+E --> K
+
 ## Repository Structure
 
 ```
