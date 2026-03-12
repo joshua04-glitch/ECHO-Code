@@ -29,24 +29,23 @@ The project demonstrates how heterogeneous partially labeled datasets can be com
 ## Repository Structure
 Echo-Code
 │
-├── src/
-│ ├── models/
-│ │ ├── ef/
-│ │ ├── quality/
-│ │ └── segmentation/
-│ │
-│ └── inference/
+├── main.py # Entry point for inference
+├── requirements.txt # Python dependencies
+├── README.md
 │
-├── scripts/
+├── checkpoints/ # Trained models
+├── weights/ # Pretrained backbone
+│
+├── scripts/ # Training scripts
 │ ├── train_echo_seg.py
 │ ├── train_ef.py
-│ ├── train_quality.py
-│ └── cardiac_report.py
+│ └── train_quality.py
 │
-├── checkpoints/
-├── data/
-├── weights/
-└── echo_codex_demo.ipynb
+├── src/ # Core model code
+│ ├── models/
+│ ├── datasets/
+│ ├── inference/
+│ └── losses/
 
 
 ---
@@ -151,6 +150,36 @@ See the project paper:
 Echo-Code_Paper.pdf
 
 ---
+
+## Quick Demo
+
+Run the full cardiac analysis pipeline on a video:
+
+```bash
+python main.py --video path/to/video.AVI
+
+Example:
+python main.py --video demo3.AVI
+════════════════════════════════════════════════════════
+CARDIAC REPORT — demo3.AVI
+════════════════════════════════════════════════════════
+
+── Ejection Fraction ──────────────────────────────
+EF (regression)  : 61.7 %
+EF (seg-based)   : 66.5 %
+
+── Volumes ────────────────────────────────────────
+EDV              : 83.6 mL
+ESV              : 28.0 mL
+Stroke Volume    : 55.6 mL
+
+── Cardiac Output ─────────────────────────────────
+Heart Rate       : 60 bpm
+Cardiac Output   : 3.33 L/min
+
+
+---
+
 
 ## License
 
