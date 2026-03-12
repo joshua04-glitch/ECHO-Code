@@ -33,9 +33,9 @@ graph LR
 
 A[Echocardiography Video] --> B[Frame Extraction]
 
-B --> C[Segmentation Model<br>Attention U-Net]
-B --> D[EF Regression Model<br>ConvNeXt + Transformer]
-B --> E[Image Quality Model<br>EfficientNet-B0]
+B --> C[Segmentation Model]
+B --> D[EF Regression Model]
+B --> E[Image Quality Model]
 
 C --> F[Chamber Areas]
 F --> G[EDV / ESV]
@@ -48,7 +48,7 @@ I --> J[Cardiac Output]
 H --> K[Cardiac Report]
 J --> K
 E --> K
-
+```
 ## Repository Structure
 
 ```
